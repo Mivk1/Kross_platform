@@ -15,7 +15,18 @@ def get_float_input(prompt: str, error_message: str = "Пожалуйста, в�
         print(error_message)
         return get_float_input(prompt, error_message)
 
-def get_positive_float_input(prompt: str, error_message: str = "Пожалуйста, введите положительное дробное число!") -> float:
+def get_reasonable_x(prompt: str) -> float:
+    value = get_float_input(prompt)
+    # слишком большое значение х
+    if abs(value) > 60:
+        print("Предупреждение: Слишком большое значение")
+        print("Используйте значения в диапазоне [-60 , 60]")
+        return get_reasonable_x(prompt)
+
+    return value
+
+def get_positive_float_input(prompt: str,
+                             error_message: str = "Пожалуйста, введите положительное дробное число!") -> float:
     value = get_float_input(prompt, "Пожалуйста, введите число!")
     if value <= 0:
         print(error_message)
@@ -28,10 +39,17 @@ def get_accurate(prompt: str) -> float:
     if value >= 1:
         print("Точность вычисления должна быть меньше 1 (например, 0.1, 0.01, 0.001)")
         return get_accurate(prompt)
-
     return value
 
 def calculate_sin_maclaurin(x: float, epsilon: float) -> float:
+    # нормализация угла для больших значений
+    # для избегания ошибок округления, но значение sin(x) сохраняется верным
+    x = x % (2 * math.pi)
+    if x > math.pi:
+        x = x - 2 * math.pi
+    elif x < -math.pi:
+        x = x + 2 * math.pi
+
     def term(n: int) -> float:
         sign = (-1) ** n
         exponent = 2 * n + 1
@@ -49,7 +67,7 @@ def calculate_sin_maclaurin(x: float, epsilon: float) -> float:
     return sum_terms(0, 0.0)
 
 def main() -> None:
-    x = get_float_input("Введите значение x: ")
+    x = get_reasonable_x("Введите значение x: ")
     epsilon = get_accurate("Введите точность вычисления (например, 0.0001): ")
 
     my_sin = calculate_sin_maclaurin(x, epsilon)
@@ -60,12 +78,6 @@ def main() -> None:
     print(f"Ряд Маклорена: {my_sin:.10f}")
     print(f"math.sin():    {math_sin:.10f}")
     print(f"Разница:       {difference:.2e}")
-
-    if difference < 1e-15:
-        print("Количество верных знаков: >15")
-    else:
-        correct_digits_int = math.floor(-math.log10(difference))
-        print(f"Количество верных знаков: {correct_digits_int}")
 
 if __name__ == "__main__":
     main()
