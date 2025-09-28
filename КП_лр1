@@ -1,0 +1,71 @@
+import math
+from functools import reduce
+from operator import mul
+import re
+
+def get_float_input(prompt: str, error_message: str = "Пожалуйста, введите корректное значение!") -> float:
+    try:
+        value = input(prompt).strip()
+
+        # проверка на целые числа без точки (01, 001 и т.д.)
+        if re.match(r'^0+[1-9]', value):
+            print("Для дробных чисел используйте точку или запятую")
+            return get_float_input(prompt, error_message)
+        # учет значений с точкой и запятой
+        value = value.replace(',', '.')
+        return float(value)
+    except ValueError:
+        print(error_message)
+        return get_float_input(prompt, error_message)
+
+def get_positive_float_input(prompt: str, error_message: str = "Пожалуйста, введите положительное число!") -> float:
+    value = get_float_input(prompt, "Пожалуйста, введите число!")
+    if value <= 0:
+        print(error_message)
+        return get_positive_float_input(prompt, error_message)
+    return value
+
+def calculate_sin_maclaurin(x: float, epsilon: float) -> float:
+    x = x % (2 * math.pi)
+    if x > math.pi:
+        x = x - 2 * math.pi
+    elif x < -math.pi:
+        x = x + 2 * math.pi
+
+    def term(n: int) -> float:
+        sign = (-1) ** n
+        exponent = 2 * n + 1
+        numerator = x ** exponent
+        denominator = reduce(mul, range(1, exponent + 1), 1)
+        return sign * numerator / denominator
+
+    def sum_terms(n: int, current_sum: float) -> float:
+        current_term = term(n)
+        new_sum = current_sum + current_term
+        if abs(current_term) < epsilon:
+            return new_sum
+        return sum_terms(n + 1, new_sum)
+
+    return sum_terms(0, 0.0)
+
+def main() -> None:
+    x = get_float_input("Введите значение x: ")
+    epsilon = get_positive_float_input("Введите точность вычисления (например, 0.0001): ")
+
+    my_sin = calculate_sin_maclaurin(x, epsilon)
+    math_sin = math.sin(x)
+    difference = abs(my_sin - math_sin)
+
+    print(f"\nРезультаты:")
+    print(f"Ряд Маклорена: {my_sin:.10f}")
+    print(f"math.sin():    {math_sin:.10f}")
+    print(f"Разница:       {difference:.2e}")
+
+    if difference < 1e-15:
+        print("Количество верных знаков: >15")
+    else:
+        correct_digits_int = math.floor(-math.log10(difference))
+        print(f"Количество верных знаков: {correct_digits_int}")
+
+if __name__ == "__main__":
+    main()
