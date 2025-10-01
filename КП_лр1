@@ -1,83 +1,88 @@
-import math
-from functools import reduce
-from operator import mul
-import re
+import kotlin.math.*
+import java.util.regex.Pattern
 
-def get_float_input(prompt: str, error_message: str = "Пожалуйста, введите корректное значение!") -> float:
-    try:
-        value = input(prompt).strip()
-        if re.match(r'^0+[1-9]', value):
-            print("Для дробных чисел используйте точку или запятую")
-            return get_float_input(prompt, error_message)
-        value = value.replace(',', '.')
-        return float(value)
-    except ValueError:
-        print(error_message)
-        return get_float_input(prompt, error_message)
+fun getFloatInput(prompt: String, errorMessage: String = "Пожалуйста, введите корректное значение!"): Double {
+    try {
+        print(prompt)
+        val value = readLine()!!.trim()
 
-def get_reasonable_x(prompt: str) -> float:
-    value = get_float_input(prompt)
-    # слишком большое значение х
-    if abs(value) > 60:
-        print("Предупреждение: Слишком большое значение")
-        print("Используйте значения в диапазоне [-60 , 60]")
-        return get_reasonable_x(prompt)
+        // Проверка на целые числа без точки (01, 001 и т.д.)
+        if (Pattern.matches("^0+[1-9].*", value)) {
+            println("Для дробных чисел используйте точку или запятую")
+            return getFloatInput(prompt, errorMessage)
+        }
 
+        // Учет значений с точкой и запятой
+        val normalizedValue = value.replace(',', '.')
+        return normalizedValue.toDouble()
+    } catch (e: Exception) {
+        println(errorMessage)
+        return getFloatInput(prompt, errorMessage)
+    }
+}
+
+fun getPositiveFloatInput(
+    prompt: String,
+    errorMessage: String = "Пожалуйста, введите положительное дробное число!"
+): Double {
+    val value = getFloatInput(prompt, "Пожалуйста, введите число!")
+    if (value <= 0) {
+        println(errorMessage)
+        return getPositiveFloatInput(prompt, errorMessage)
+    }
     return value
+}
 
-def get_positive_float_input(prompt: str,
-                             error_message: str = "Пожалуйста, введите положительное дробное число!") -> float:
-    value = get_float_input(prompt, "Пожалуйста, введите число!")
-    if value <= 0:
-        print(error_message)
-        return get_positive_float_input(prompt, error_message)
+// Проверка точности вычисления
+fun getAccurate(prompt: String): Double {
+    val value = getPositiveFloatInput(prompt)
+    if (value >= 1) {
+        println("Точность вычисления должна быть меньше 1 (например, 0.1, 0.01, 0.001)")
+        return getAccurate(prompt)
+    }
     return value
+}
 
-# проверка точности вычисления
-def get_accurate(prompt: str) -> float:
-    value = get_positive_float_input(prompt)
-    if value >= 1:
-        print("Точность вычисления должна быть меньше 1 (например, 0.1, 0.01, 0.001)")
-        return get_accurate(prompt)
-    return value
+fun calculateSinMaclaurin(x: Double, epsilon: Double): Double {
+    // Нормализация угла для больших значений
+    var normalizedX = x % (2 * PI)
+    if (normalizedX > PI) {
+        normalizedX -= 2 * PI
+    } else if (normalizedX < -PI) {
+        normalizedX += 2 * PI
+    }
 
-def calculate_sin_maclaurin(x: float, epsilon: float) -> float:
-    # нормализация угла для больших значений
-    # для избегания ошибок округления, но значение sin(x) сохраняется верным
-    x = x % (2 * math.pi)
-    if x > math.pi:
-        x = x - 2 * math.pi
-    elif x < -math.pi:
-        x = x + 2 * math.pi
-
-    def term(n: int) -> float:
-        sign = (-1) ** n
-        exponent = 2 * n + 1
-        numerator = x ** exponent
-        denominator = reduce(mul, range(1, exponent + 1), 1)
+    fun term(n: Int): Double {
+        val sign = if (n % 2 == 0) 1.0 else -1.0
+        val exponent = 2 * n + 1
+        val numerator = normalizedX.pow(exponent)
+        val denominator = (1..exponent).fold(1.0) { acc, i -> acc * i }
         return sign * numerator / denominator
+    }
 
-    def sum_terms(n: int, current_sum: float) -> float:
-        current_term = term(n)
-        new_sum = current_sum + current_term
-        if abs(current_term) < epsilon:
-            return new_sum
-        return sum_terms(n + 1, new_sum)
+    tailrec fun sumTerms(n: Int, currentSum: Double): Double {
+        val currentTerm = term(n)
+        val newSum = currentSum + currentTerm
+        return if (abs(currentTerm) < epsilon) {
+            newSum
+        } else {
+            sumTerms(n + 1, newSum)
+        }
+    }
 
-    return sum_terms(0, 0.0)
+    return sumTerms(0, 0.0)
+}
 
-def main() -> None:
-    x = get_reasonable_x("Введите значение x: ")
-    epsilon = get_accurate("Введите точность вычисления (например, 0.0001): ")
+fun main() {
+    val x = getFloatInput("Введите значение x: ")
+    val epsilon = getAccurate("Введите точность вычисления (например, 0.0001): ")
 
-    my_sin = calculate_sin_maclaurin(x, epsilon)
-    math_sin = math.sin(x)
-    difference = abs(my_sin - math_sin)
+    val mySin = calculateSinMaclaurin(x, epsilon)
+    val mathSin = sin(x)
+    val difference = abs(mySin - mathSin)
 
-    print(f"\nРезультаты:")
-    print(f"Ряд Маклорена: {my_sin:.10f}")
-    print(f"math.sin():    {math_sin:.10f}")
-    print(f"Разница:       {difference:.2e}")
-
-if __name__ == "__main__":
-    main()
+    println("\nРезультаты:")
+    println("Ряд Маклорена: ${"%.10f".format(mySin)}")
+    println("math.sin():    ${"%.10f".format(mathSin)}")
+    println("Разница:       ${"%.2e".format(difference)}")
+}
