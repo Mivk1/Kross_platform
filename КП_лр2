@@ -1,0 +1,86 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.*;
+
+public class KP_lr2 {
+    private final ExecutorService executor;
+    private final Set<String> visitedUrls;
+
+    public KP_lr2(int threads) {
+        this.executor = Executors.newFixedThreadPool(threads);
+        this.visitedUrls = ConcurrentHashMap.newKeySet();
+    }
+
+    public CompletableFuture<Void> crawlWebsites(List<String> urls) {
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        for (String url : urls) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+                    if (visitedUrls.add(url)) {
+                        System.out.println(Thread.currentThread().getName() + " обрабатывает: " + url);
+                        String content = fetchUrl(url);
+                        System.out.println("Успешно обработан: " + url + " (размер: " + content.length() + " символов)");
+                    }
+                } catch (Exception e) {
+                    System.err.println("Ошибка при обработке " + url + ": " + e.getMessage());
+                }
+            }, executor);
+
+            futures.add(future);
+        }
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+    }
+
+    private String fetchUrl(String urlString) throws Exception {
+        URL url = new URL(urlString);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(connection.getInputStream()))) {
+
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line);
+            }
+            return content.toString();
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    public void shutdown() {
+        executor.shutdown();
+    }
+
+    public static void main(String[] args) throws Exception {
+        KP_lr2 crawler = new KP_lr2(5);
+
+        List<String> websites = Arrays.asList(
+                "https://ru.wikipedia.org/wiki/%D0%92%D0%B8%D0%BA%D0%B8%D0%BF%D0%B5%D0%B4%D0%B8%D1%8F",
+                "https://studfile.net/",
+                "https://ru.stackoverflow.com/",
+                "https://guap.ru/",
+                "https://ru.freepik.com/photos"
+        );
+
+        System.out.println("Начало параллельного сканирования...");
+        long start = System.currentTimeMillis();
+
+        crawler.crawlWebsites(websites).get(30, TimeUnit.SECONDS);
+
+        long end = System.currentTimeMillis();
+        System.out.println("Сканирование завершено за " + (end - start) + " мс");
+        System.out.println("Всего обработано URL: " + crawler.visitedUrls.size());
+
+        crawler.shutdown();
+    }
+}
