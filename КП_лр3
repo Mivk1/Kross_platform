@@ -1,0 +1,387 @@
+package com.example.kp_3
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.kp_3.ui.theme.KP_3Theme
+import java.text.DecimalFormat
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            KP_3Theme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    SpeedConverterApp()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SpeedConverterApp() {
+    var inputValue by remember { mutableStateOf("") }
+    var fromUnit by remember { mutableStateOf(0) }
+    var toUnit by remember { mutableStateOf(1) }
+    var result by remember { mutableStateOf("Результат") }
+    var showPrecisionWarning by remember { mutableStateOf(false) }
+
+    val speedUnits = listOf(
+        "м/с", "км/ч", "миль/ч", "узлы", "фт/с",
+        "м/мин", "км/мин", "км/с", "скорость света", "Махи"
+    )
+
+    val conversionRates = mapOf(
+        "м/с" to 1.0,
+        "км/ч" to 3.6,
+        "миль/ч" to 2.23694,
+        "узлы" to 1.94384,
+        "фт/с" to 3.28084,
+        "м/мин" to 60.0,
+        "км/мин" to 0.06,
+        "км/с" to 0.001,
+        "скорость света" to 3.3356e-9,
+        "Махи" to 0.00293858
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Заголовок
+        Text(
+            text = "Конвертер скорости",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+
+        // Поле ввода
+        OutlinedTextField(
+            value = inputValue,
+            onValueChange = {
+                inputValue = it
+                // Сбрасываем предупреждение при изменении ввода
+                showPrecisionWarning = false
+            },
+            label = { Text("Введите значение") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        )
+
+        // Спинеры выбора единиц
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Из:", style = MaterialTheme.typography.bodySmall)
+                DropdownMenuBox(
+                    selectedIndex = fromUnit,
+                    items = speedUnits,
+                    onSelected = { fromUnit = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text("В:", style = MaterialTheme.typography.bodySmall)
+                DropdownMenuBox(
+                    selectedIndex = toUnit,
+                    items = speedUnits,
+                    onSelected = { toUnit = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        // Кнопки
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
+        ) {
+            Button(
+                onClick = {
+                    if (inputValue.isNotEmpty()) {
+                        try {
+                            val value = inputValue.toDouble()
+                            val fromUnitName = speedUnits[fromUnit]
+                            val toUnitName = speedUnits[toUnit]
+
+                            // Проверяем на очень большие числа
+                            val isVeryLargeNumber = inputValue.length > 15 ||
+                                    value > 1e15 ||
+                                    value < -1e15
+
+                            // Проверяем на очень маленькие числа (близкие к нулю)
+                            val isVerySmallNumber = value != 0.0 &&
+                                    Math.abs(value) < 1e-15
+
+                            val valueInMps = value / conversionRates[fromUnitName]!!
+                            val convertedValue = valueInMps * conversionRates[toUnitName]!!
+
+                            // Проверяем точность результата
+                            val resultString = convertedValue.toString()
+                            val hasPrecisionIssues = isVeryLargeNumber ||
+                                    isVerySmallNumber ||
+                                    resultString.contains("E") ||
+                                    resultString.length > 20
+
+                            val df = if (hasPrecisionIssues) {
+                                // Научная нотация для очень больших/маленьких чисел
+                                DecimalFormat("0.####E0")
+                            } else {
+                                // Обычный формат
+                                DecimalFormat("#.##########")
+                            }
+
+                            result = "${df.format(convertedValue)} $toUnitName"
+                            showPrecisionWarning = hasPrecisionIssues
+
+                        } catch (e: Exception) {
+                            result = "Ошибка ввода: ${e.message}"
+                            showPrecisionWarning = false
+                        }
+                    } else {
+                        result = "Введите значение"
+                        showPrecisionWarning = false
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Конвертировать")
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(
+                onClick = {
+                    inputValue = ""
+                    result = "Результат"
+                    fromUnit = 0
+                    toUnit = 1
+                    showPrecisionWarning = false
+                },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Text("Очистить")
+            }
+        }
+
+        // Результат
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Text(
+                text = result,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                textAlign = TextAlign.Center
+            )
+        }
+
+        // Предупреждение о точности
+        if (showPrecisionWarning) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "⚠️",
+                        modifier = Modifier.padding(end = 8.dp),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = "Введено очень большое/малое значение. Результат может быть приблизительным.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
+
+        // Цифровая клавиатура
+        NumberPad(
+            onNumberClick = { digit ->
+                inputValue += digit
+                showPrecisionWarning = false
+            },
+            onDotClick = {
+                if (!inputValue.contains(".")) {
+                    inputValue += "."
+                    showPrecisionWarning = false
+                }
+            },
+            onBackspaceClick = {
+                if (inputValue.isNotEmpty()) {
+                    inputValue = inputValue.dropLast(1)
+                    showPrecisionWarning = false
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun DropdownMenuBox(
+    selectedIndex: Int,
+    items: List<String>,
+    onSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        OutlinedButton(
+            onClick = { expanded = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(items[selectedIndex])
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            items.forEachIndexed { index, item ->
+                DropdownMenuItem(
+                    text = { Text(item) },
+                    onClick = {
+                        onSelected(index)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NumberPad(
+    onNumberClick: (String) -> Unit,
+    onDotClick: () -> Unit,
+    onBackspaceClick: () -> Unit
+) {
+    Column {
+        // Первый ряд
+        Row {
+            NumberButton("7", onNumberClick)
+            Spacer(modifier = Modifier.width(4.dp))
+            NumberButton("8", onNumberClick)
+            Spacer(modifier = Modifier.width(4.dp))
+            NumberButton("9", onNumberClick)
+            Spacer(modifier = Modifier.width(4.dp))
+            ActionButton("⌫", onBackspaceClick)
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Второй ряд
+        Row {
+            NumberButton("4", onNumberClick)
+            Spacer(modifier = Modifier.width(4.dp))
+            NumberButton("5", onNumberClick)
+            Spacer(modifier = Modifier.width(4.dp))
+            NumberButton("6", onNumberClick)
+            Spacer(modifier = Modifier.width(4.dp))
+            ActionButton(".", onDotClick)
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Третий ряд
+        Row {
+            NumberButton("1", onNumberClick)
+            Spacer(modifier = Modifier.width(4.dp))
+            NumberButton("2", onNumberClick)
+            Spacer(modifier = Modifier.width(4.dp))
+            NumberButton("3", onNumberClick)
+            Spacer(modifier = Modifier.width(4.dp))
+            NumberButton("0", onNumberClick)
+        }
+    }
+}
+
+@Composable
+fun NumberButton(
+    text: String,
+    onClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = { onClick(text) },
+        modifier = modifier.size(64.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Text(text, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+fun ActionButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.size(64.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Text(text, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SpeedConverterPreview() {
+    KP_3Theme {
+        SpeedConverterApp()
+    }
+}
