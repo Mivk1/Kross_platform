@@ -21,14 +21,13 @@ class TaskAdapter(
             titleTextView.text = task.title
             completedCheckBox.isChecked = task.isCompleted
 
-            // чекбокс
-            completedCheckBox.setOnCheckedChangeListener(null)
-            completedCheckBox.isChecked = task.isCompleted
+            // Обработка чекбокса
             completedCheckBox.setOnCheckedChangeListener { _, isChecked ->
                 task.isCompleted = isChecked
                 onTaskClick(task)
             }
 
+            // Обработка кнопки удаления
             deleteButton.setOnClickListener {
                 onTaskDelete(task)
             }
@@ -46,19 +45,4 @@ class TaskAdapter(
     }
 
     override fun getItemCount(): Int = tasks.size
-
-    fun updateTasks(newTasks: List<Task>) {
-        tasks.clear()
-        tasks.addAll(newTasks)
-        notifyDataSetChanged()  // уведомлениеRecyclerView об изменениях
-    }
-
-    // Функция для удаления задачи
-    fun removeTask(task: Task) {
-        val position = tasks.indexOfFirst { it.id == task.id }
-        if (position != -1) {
-            tasks.removeAt(position)
-            notifyItemRemoved(position)
-        }
-    }
 }
