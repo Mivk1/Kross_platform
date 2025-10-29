@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <!-- Кнопка назад -->
+    <Button
+        android:id="@+id/backToGalleryButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:text="Вернуться в галерею"
+        android:layout_margin="16dp"
+        android:background="@android:color/white"
+        android:textColor="@android:color/black" />
+
+    <!-- Изображение на весь экран -->
+    <ImageView
+        android:id="@+id/fullscreenImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerInside"
+        android:contentDescription="Полноэкранное изображение" />
+
+</RelativeLayout>
