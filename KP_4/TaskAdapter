@@ -1,0 +1,52 @@
+package com.kp_4
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.*
+import androidx.recyclerview.widget.RecyclerView
+
+class TaskAdapter(
+    private var tasks: MutableList<Task>,
+    private val onTaskClick: (Task) -> Unit,
+    private val onTaskDelete: (Task) -> Unit
+) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
+
+    class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val titleTextView: TextView = itemView.findViewById(R.id.taskTitle)
+        private val completedCheckBox: CheckBox = itemView.findViewById(R.id.taskCompleted)
+        private val deleteButton: Button = itemView.findViewById(R.id.deleteButton)
+
+        fun bind(task: Task, onTaskClick: (Task) -> Unit, onTaskDelete: (Task) -> Unit) {
+            titleTextView.text = task.title
+            completedCheckBox.isChecked = task.isCompleted
+
+            completedCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                task.isCompleted = isChecked
+                onTaskClick(task)
+            }
+
+            deleteButton.setOnClickListener {
+                onTaskDelete(task)
+            }
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_task, parent, false)
+        return TaskViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
+        holder.bind(tasks[position], onTaskClick, onTaskDelete)
+    }
+
+    override fun getItemCount(): Int = tasks.size
+
+    fun updateTasks(newTasks: List<Task>) {
+        tasks.clear()
+        tasks.addAll(newTasks)
+        notifyDataSetChanged()
+    }
+}
