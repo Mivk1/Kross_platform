@@ -26,14 +26,19 @@ class MainActivity : AppCompatActivity() {
         taskAdapter = TaskAdapter(
             tasks,
             onTaskClick = { updatedTask ->
+                // Обновление задачи при клике на чекбокс
                 val index = tasks.indexOfFirst { it.id == updatedTask.id }
                 if (index != -1) {
                     tasks[index] = updatedTask
+                    // Показываем сообщение о статус задачи
+                    val status = if (updatedTask.isCompleted) "выполнена" else "не выполнена"
+                    Toast.makeText(this, "Задача '${updatedTask.title}' $status", Toast.LENGTH_SHORT).show()
                 }
             },
             onTaskDelete = { taskToDelete ->
-                tasks.removeAll { it.id == taskToDelete.id }
-                taskAdapter.updateTasks(tasks)
+                // Удаление задачи
+                taskAdapter.removeTask(taskToDelete)
+                Toast.makeText(this, "Задача удалена", Toast.LENGTH_SHORT).show()
             }
         )
 
@@ -52,6 +57,11 @@ class MainActivity : AppCompatActivity() {
             if (taskTitle.isNotEmpty()) {
                 val newTask = Task(title = taskTitle)
                 tasks.add(newTask)
+
+                println("✅ Задача добавлена: '$taskTitle'")
+                println("✅ Всего задач в списке: ${tasks.size}")
+                println("✅ tasksRecyclerView: ${findViewById<RecyclerView>(R.id.tasksRecyclerView)}")
+
                 taskAdapter.updateTasks(tasks)
                 taskInput.text.clear()
             } else {
