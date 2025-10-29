@@ -1,0 +1,67 @@
+package com.kp_4
+
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var taskAdapter: TaskAdapter
+    private val tasks = mutableListOf<Task>()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        setupRecyclerView()
+        setupClickListeners()
+    }
+
+    private fun setupRecyclerView() {
+        taskAdapter = TaskAdapter(
+            tasks,
+            onTaskClick = { updatedTask ->
+                val index = tasks.indexOfFirst { it.id == updatedTask.id }
+                if (index != -1) {
+                    tasks[index] = updatedTask
+                }
+            },
+            onTaskDelete = { taskToDelete ->
+                tasks.removeAll { it.id == taskToDelete.id }
+                taskAdapter.updateTasks(tasks)
+            }
+        )
+
+        val recyclerView = findViewById<RecyclerView>(R.id.tasksRecyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = taskAdapter
+    }
+
+    private fun setupClickListeners() {
+        val addTaskButton = findViewById<Button>(R.id.addTaskButton)
+        val taskInput = findViewById<EditText>(R.id.taskInput)
+        val openGalleryButton = findViewById<Button>(R.id.openGalleryButton)
+
+        addTaskButton.setOnClickListener {
+            val taskTitle = taskInput.text.toString().trim()
+            if (taskTitle.isNotEmpty()) {
+                val newTask = Task(title = taskTitle)
+                tasks.add(newTask)
+                taskAdapter.updateTasks(tasks)
+                taskInput.text.clear()
+            } else {
+                Toast.makeText(this, "Введите задачу", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        openGalleryButton.setOnClickListener {
+            val intent = Intent(this, GalleryActivity::class.java)
+            startActivity(intent)
+        }
+    }
+}
