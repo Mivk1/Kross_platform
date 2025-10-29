@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -30,21 +31,47 @@ class MainActivity : AppCompatActivity() {
                 val index = tasks.indexOfFirst { it.id == updatedTask.id }
                 if (index != -1) {
                     tasks[index] = updatedTask
-                    // Показываем сообщение о статус задачи
+                    // Показываем сообщение о статусе задачи
                     val status = if (updatedTask.isCompleted) "выполнена" else "не выполнена"
                     Toast.makeText(this, "Задача '${updatedTask.title}' $status", Toast.LENGTH_SHORT).show()
                 }
             },
             onTaskDelete = { taskToDelete ->
-                // Удаление задачи
-                taskAdapter.removeTask(taskToDelete)
-                Toast.makeText(this, "Задача удалена", Toast.LENGTH_SHORT).show()
+                // Показываем диалог подтверждения удаления
+                showDeleteConfirmationDialog(taskToDelete)
             }
         )
 
         val recyclerView = findViewById<RecyclerView>(R.id.tasksRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = taskAdapter
+    }
+
+    private fun showDeleteConfirmationDialog(taskToDelete: Task) {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Подтверждение удаления")
+            .setMessage("Вы уверены, что хотите удалить задачу \"${taskToDelete.title}\"?")
+            .setPositiveButton("Да") { dialog, which ->
+                // Действие при подтверждении удаления
+                deleteTask(taskToDelete)
+            }
+            .setNegativeButton("Нет") { dialog, which ->
+                // Действие при отмене - просто закрываем диалог
+                dialog.dismiss()
+            }
+            .create()
+
+        dialog.show()
+    }
+
+    private fun deleteTask(taskToDelete: Task) {
+        val position = tasks.indexOfFirst { it.id == taskToDelete.id }
+        if (position != -1) {
+            val deletedTaskTitle = tasks[position].title
+            tasks.removeAt(position)
+            taskAdapter.notifyItemRemoved(position)
+            Toast.makeText(this, "Задача \"$deletedTaskTitle\" удалена", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun setupClickListeners() {
@@ -56,14 +83,21 @@ class MainActivity : AppCompatActivity() {
             val taskTitle = taskInput.text.toString().trim()
             if (taskTitle.isNotEmpty()) {
                 val newTask = Task(title = taskTitle)
+
+                // Добавляем задачу в список
                 tasks.add(newTask)
 
-                println("✅ Задача добавлена: '$taskTitle'")
-                println("✅ Всего задач в списке: ${tasks.size}")
-                println("✅ tasksRecyclerView: ${findViewById<RecyclerView>(R.id.tasksRecyclerView)}")
+                // Уведомляем адаптер о добавлении нового элемента
+                taskAdapter.notifyItemInserted(tasks.size - 1)
 
-                taskAdapter.updateTasks(tasks)
+                // Очищаем поле ввода
                 taskInput.text.clear()
+
+                // Прокручиваем к новой задаче
+                val recyclerView = findViewById<RecyclerView>(R.id.tasksRecyclerView)
+                recyclerView.scrollToPosition(tasks.size - 1)
+
+                Toast.makeText(this, "Задача добавлена", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(this, "Введите задачу", Toast.LENGTH_SHORT).show()
             }
