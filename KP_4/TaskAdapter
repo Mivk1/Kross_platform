@@ -21,6 +21,9 @@ class TaskAdapter(
             titleTextView.text = task.title
             completedCheckBox.isChecked = task.isCompleted
 
+            // чекбокс
+            completedCheckBox.setOnCheckedChangeListener(null)
+            completedCheckBox.isChecked = task.isCompleted
             completedCheckBox.setOnCheckedChangeListener { _, isChecked ->
                 task.isCompleted = isChecked
                 onTaskClick(task)
@@ -47,6 +50,15 @@ class TaskAdapter(
     fun updateTasks(newTasks: List<Task>) {
         tasks.clear()
         tasks.addAll(newTasks)
-        notifyDataSetChanged()
+        notifyDataSetChanged()  // уведомлениеRecyclerView об изменениях
+    }
+
+    // Функция для удаления задачи
+    fun removeTask(task: Task) {
+        val position = tasks.indexOfFirst { it.id == task.id }
+        if (position != -1) {
+            tasks.removeAt(position)
+            notifyItemRemoved(position)
+        }
     }
 }
