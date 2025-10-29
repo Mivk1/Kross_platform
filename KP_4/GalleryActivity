@@ -29,7 +29,8 @@ class GalleryActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         galleryAdapter = GalleryAdapter(images) { image ->
-            Toast.makeText(this, "Изображение ${image.id}", Toast.LENGTH_SHORT).show()
+            // УБИРАЕМ Toast и открываем полноэкранный просмотр
+            openFullscreenImage(image.imageUri)
         }
 
         val recyclerView = findViewById<RecyclerView>(R.id.galleryRecyclerView)
@@ -37,22 +38,26 @@ class GalleryActivity : AppCompatActivity() {
         recyclerView.adapter = galleryAdapter
     }
 
+    private fun openFullscreenImage(imageUri: String) {
+        val intent = Intent(this, FullscreenImageActivity::class.java)
+        intent.putExtra("image_uri", imageUri)
+        startActivity(intent)
+    }
+
     private fun setupClickListeners() {
         val addImageButton = findViewById<Button>(R.id.addImageButton)
-        val backButton = findViewById<Button>(R.id.backButton) // ДОБАВЛЕНО
+        val backButton = findViewById<Button>(R.id.backButton)
 
         addImageButton.setOnClickListener {
             checkPermissionAndPickImage()
         }
 
-        // ДОБАВЛЕН ОБРАБОТЧИК КНОПКИ НАЗАД
         backButton.setOnClickListener {
-            finish() // Закрывает текущую активность и возвращает к предыдущей
+            finish()
         }
     }
 
     private fun checkPermissionAndPickImage() {
-        // Проверяем разрешение для новых версий Android (API 33+)
         val permission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
         } else {
@@ -60,7 +65,6 @@ class GalleryActivity : AppCompatActivity() {
         }
 
         if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-            // Показываем объяснение перед запросом разрешения
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
                 Toast.makeText(this, "Разрешение нужно для выбора изображений из галереи", Toast.LENGTH_LONG).show()
             }
@@ -70,7 +74,6 @@ class GalleryActivity : AppCompatActivity() {
         }
     }
 
-    // ОБНОВЛЕНО: Обработка результата разрешений
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -98,6 +101,7 @@ class GalleryActivity : AppCompatActivity() {
             if (imageUri != null) {
                 val newImage = GalleryImage(imageUri = imageUri.toString())
                 galleryAdapter.addImage(newImage)
+                Toast.makeText(this, "Изображение добавлено", Toast.LENGTH_SHORT).show()
             }
         }
     }
