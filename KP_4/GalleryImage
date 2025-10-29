@@ -1,0 +1,6 @@
+package com.kp_4
+
+data class GalleryImage(
+    val id: Long = System.currentTimeMillis(),
+    val imageUri: String
+)
