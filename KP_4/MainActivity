@@ -14,13 +14,27 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var taskAdapter: TaskAdapter
     private val tasks = mutableListOf<Task>()
+    private lateinit var preferencesHelper: PreferencesHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        preferencesHelper = PreferencesHelper(this)
+        loadTasks() // Загружаем задачи при создании активности
+
         setupRecyclerView()
         setupClickListeners()
+    }
+
+    private fun loadTasks() {
+        val savedTasks = preferencesHelper.getTasks()
+        tasks.clear()
+        tasks.addAll(savedTasks)
+    }
+
+    private fun saveTasks() {
+        preferencesHelper.saveTasks(tasks)
     }
 
     private fun setupRecyclerView() {
@@ -31,6 +45,7 @@ class MainActivity : AppCompatActivity() {
                 val index = tasks.indexOfFirst { it.id == updatedTask.id }
                 if (index != -1) {
                     tasks[index] = updatedTask
+                    saveTasks() // Сохраняем при изменении статуса
                     // Показываем сообщение о статусе задачи
                     val status = if (updatedTask.isCompleted) "выполнена" else "не выполнена"
                     Toast.makeText(this, "Задача '${updatedTask.title}' $status", Toast.LENGTH_SHORT).show()
@@ -70,6 +85,7 @@ class MainActivity : AppCompatActivity() {
             val deletedTaskTitle = tasks[position].title
             tasks.removeAt(position)
             taskAdapter.notifyItemRemoved(position)
+            saveTasks() // Сохраняем после удаления
             Toast.makeText(this, "Задача \"$deletedTaskTitle\" удалена", Toast.LENGTH_SHORT).show()
         }
     }
@@ -90,6 +106,9 @@ class MainActivity : AppCompatActivity() {
                 // Уведомляем адаптер о добавлении нового элемента
                 taskAdapter.notifyItemInserted(tasks.size - 1)
 
+                // Сохраняем задачи
+                saveTasks()
+
                 // Очищаем поле ввода
                 taskInput.text.clear()
 
@@ -107,5 +126,10 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, GalleryActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        saveTasks() // Дополнительное сохранение при уходе из активности
     }
 }
