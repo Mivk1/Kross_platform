@@ -1,0 +1,26 @@
+package com.kp_4
+
+import android.content.Context
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+
+class PreferencesHelper(private val context: Context) {
+
+    private val sharedPreferences = context.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
+    private val gson = Gson()
+
+    fun saveTasks(tasks: List<Task>) {
+        val json = gson.toJson(tasks)
+        sharedPreferences.edit().putString("tasks", json).apply()
+    }
+
+    fun getTasks(): List<Task> {
+        val json = sharedPreferences.getString("tasks", null)
+        return if (json != null) {
+            val type = object : TypeToken<List<Task>>() {}.type
+            gson.fromJson(json, type) ?: emptyList()
+        } else {
+            emptyList()
+        }
+    }
+}
