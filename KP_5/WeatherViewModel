@@ -1,0 +1,58 @@
+package com.example.kp_5
+
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+
+class WeatherViewModel : ViewModel() {
+    private val _weather = MutableLiveData<Weather>()
+    val weather: LiveData<Weather> = _weather
+
+    private val _error = MutableLiveData<String>()
+    val error: LiveData<String> = _error
+
+    private val _loading = MutableLiveData<Boolean>()
+    val loading: LiveData<Boolean> = _loading
+
+    // Сохраняем последний запрошенный город
+    private var lastSearchedCity = "Moscow"
+
+    fun loadWeather(city: String = "Moscow") {
+        if (city.isNotEmpty()) {
+            lastSearchedCity = city
+        }
+
+        _loading.value = true
+        viewModelScope.launch {
+            try {
+                val apiKey = "bd5e378503939ddaee76f12ad7a97608"
+                val cityToSearch = if (city.isEmpty()) lastSearchedCity else city
+                val response = WeatherApiService.create().getWeather(cityToSearch, apiKey)
+
+                val weatherData = Weather(
+                    city = response.name,
+                    temperature = response.main.temp,
+                    description = response.weather[0].description,
+                    humidity = response.main.humidity,
+                    windSpeed = response.wind.speed
+                )
+                _weather.value = weatherData
+                _error.value = null
+            } catch (e: Exception) {
+                _error.value = "Ошибка загрузки: ${e.message}"
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    // Метод для загрузки последнего города
+    fun loadLastWeather() {
+        loadWeather(lastSearchedCity)
+    }
+
+    // Получить последний город
+    fun getLastCity(): String = lastSearchedCity
+}
