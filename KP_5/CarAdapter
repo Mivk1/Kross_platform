@@ -14,12 +14,18 @@ class CarAdapter(
     class CarViewHolder(itemView: View, private val onItemClick: (CarListFragment.Car) -> Unit) :
         RecyclerView.ViewHolder(itemView) {
 
-        private val brandText: TextView = itemView.findViewById(android.R.id.text1)
-        private val modelText: TextView = itemView.findViewById(android.R.id.text2)
+        private val brandText: TextView = itemView.findViewById(R.id.textBrand)
+        private val modelText: TextView = itemView.findViewById(R.id.textModel)
+        private val yearText: TextView = itemView.findViewById(R.id.textYear)
+        private val priceText: TextView = itemView.findViewById(R.id.textPrice)
+        private val colorText: TextView = itemView.findViewById(R.id.textColor)
 
         fun bind(car: CarListFragment.Car) {
             brandText.text = car.brand
-            modelText.text = "${car.model} • ${car.year} • $${car.price}"
+            modelText.text = car.model
+            yearText.text = car.year.toString()
+            priceText.text = "$${car.price.toInt()}"
+            colorText.text = car.color
 
             itemView.setOnClickListener {
                 onItemClick(car)
@@ -29,7 +35,7 @@ class CarAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CarViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(android.R.layout.simple_list_item_2, parent, false)
+            .inflate(R.layout.item_car, parent, false)
         return CarViewHolder(view, onItemClick)
     }
 
