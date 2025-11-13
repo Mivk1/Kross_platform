@@ -1,0 +1,46 @@
+package com.example.kp_5
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+
+class CarAdapter(
+    private var cars: List<CarListFragment.Car> = emptyList(),
+    private val onItemClick: (CarListFragment.Car) -> Unit = {}
+) : RecyclerView.Adapter<CarAdapter.CarViewHolder>() {
+
+    class CarViewHolder(itemView: View, private val onItemClick: (CarListFragment.Car) -> Unit) :
+        RecyclerView.ViewHolder(itemView) {
+
+        private val brandText: TextView = itemView.findViewById(android.R.id.text1)
+        private val modelText: TextView = itemView.findViewById(android.R.id.text2)
+
+        fun bind(car: CarListFragment.Car) {
+            brandText.text = car.brand
+            modelText.text = "${car.model} • ${car.year} • $${car.price}"
+
+            itemView.setOnClickListener {
+                onItemClick(car)
+            }
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CarViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(android.R.layout.simple_list_item_2, parent, false)
+        return CarViewHolder(view, onItemClick)
+    }
+
+    override fun onBindViewHolder(holder: CarViewHolder, position: Int) {
+        holder.bind(cars[position])
+    }
+
+    override fun getItemCount(): Int = cars.size
+
+    fun updateData(newCars: List<CarListFragment.Car>) {
+        cars = newCars
+        notifyDataSetChanged()
+    }
+}
