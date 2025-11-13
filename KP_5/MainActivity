@@ -1,0 +1,46 @@
+package com.example.kp_5
+
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.bottomnavigation.BottomNavigationView
+
+class MainActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+
+        bottomNavigation.setOnNavigationItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_weather -> {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, WeatherFragment())
+                        .commit()
+                    true
+                }
+                R.id.nav_cars -> { 
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, CarListFragment())
+                        .commit()
+                    true
+                }
+                R.id.nav_about -> {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, AboutFragment())
+                        .commit()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        // Загружаем фрагмент погоды при запуске (задача 1)
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, WeatherFragment())
+                .commit()
+        }
+    }
+}
