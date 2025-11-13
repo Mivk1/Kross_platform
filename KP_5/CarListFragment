@@ -1,0 +1,58 @@
+package com.example.kp_5
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+
+class CarListFragment : Fragment() {
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: CarAdapter
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_car_list, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        recyclerView = view.findViewById(R.id.recyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        adapter = CarAdapter { car ->
+            // Простой переход (можно оставить или упростить)
+            // Для задания достаточно просто списка
+        }
+
+        recyclerView.adapter = adapter
+
+        // Загружаем тестовые данные
+        loadMockData()
+    }
+
+    private fun loadMockData() {
+        val mockCars = listOf(
+            Car("Toyota", "Camry", 2023, 25000.0, "Black"),
+            Car("Honda", "Civic", 2022, 22000.0, "White"),
+            Car("BMW", "X5", 2023, 55000.0, "Blue"),
+            Car("Mercedes", "C-Class", 2022, 45000.0, "Silver")
+        )
+        adapter.updateData(mockCars)
+    }
+
+    // Простая модель автомобиля прямо во фрагменте
+    data class Car(
+        val brand: String,
+        val model: String,
+        val year: Int,
+        val price: Double,
+        val color: String
+    )
+}
