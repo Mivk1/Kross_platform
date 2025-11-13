@@ -1,0 +1,88 @@
+package com.example.kp_5
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.snackbar.Snackbar
+
+class WeatherFragment : Fragment() {
+
+    private lateinit var viewModel: WeatherViewModel
+    private lateinit var cityInput: EditText
+    private lateinit var searchButton: Button
+    private lateinit var cityText: TextView
+    private lateinit var tempText: TextView
+    private lateinit var descText: TextView
+    private lateinit var humidityText: TextView
+    private lateinit var windText: TextView
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_weather, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Находим View элементы
+        cityInput = view.findViewById(R.id.cityInput)
+        searchButton = view.findViewById(R.id.searchButton)
+        cityText = view.findViewById(R.id.cityText)
+        tempText = view.findViewById(R.id.tempText)
+        descText = view.findViewById(R.id.descText)
+        humidityText = view.findViewById(R.id.humidityText)
+        windText = view.findViewById(R.id.windText)
+
+        viewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
+
+        // Обработчик поиска
+        searchButton.setOnClickListener {
+            val city = cityInput.text.toString().trim()
+            if (city.isNotEmpty()) {
+                viewModel.loadWeather(city)
+            } else {
+                Snackbar.make(view, "Введите название города", Snackbar.LENGTH_SHORT).show()
+            }
+        }
+
+        // Наблюдатели
+        viewModel.weather.observe(viewLifecycleOwner) { weather ->
+            displayWeather(weather)
+            // Обновляем поле ввода при получении данных
+            cityInput.setText(weather.city)
+        }
+
+        viewModel.error.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                Snackbar.make(view, it, Snackbar.LENGTH_LONG).show()
+            }
+        }
+
+        viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
+            searchButton.isEnabled = !isLoading
+            searchButton.text = if (isLoading) "Загрузка..." else "Поиск"
+        }
+
+        // Загружаем последнюю погоду при создании фрагмента
+        viewModel.loadLastWeather()
+
+        // Устанавливаем последний город в поле ввода
+        cityInput.setText(viewModel.getLastCity())
+    }
+
+    private fun displayWeather(weather: Weather) {
+        cityText.text = "Город: ${weather.city}"
+        tempText.text = "Температура: ${weather.temperature}°C"
+        descText.text = "Описание: ${weather.description}"
+        humidityText.text = "Влажность: ${weather.humidity}%"
+        windText.text = "Ветер: ${weather.windSpeed} м/с"
+    }
+}
