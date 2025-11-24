@@ -1,0 +1,66 @@
+[
+  {
+    "brand": "Toyota",
+    "model": "Camry",
+    "year": 2023,
+    "price": 25000,
+    "color": "Черный",
+    "dealership": "Тойота Центр Москва"
+  },
+  {
+    "brand": "BMW",
+    "model": "X5",
+    "year": 2022,
+    "price": 55000,
+    "color": "Белый",
+    "dealership": "БМВ Автосалон"
+  },
+  {
+    "brand": "Honda",
+    "model": "Civic",
+    "year": 2023,
+    "price": 22000,
+    "color": "Красный",
+    "dealership": "Хонда Центр"
+  },
+  {
+    "brand": "Mercedes-Benz",
+    "model": "C-Class",
+    "year": 2022,
+    "price": 45000,
+    "color": "Серебристый",
+    "dealership": "Мерседес Бенц"
+  },
+  {
+    "brand": "Audi",
+    "model": "A4",
+    "year": 2023,
+    "price": 42000,
+    "color": "Синий",
+    "dealership": "Ауди Центр"
+  },
+  {
+    "brand": "Ford",
+    "model": "Focus",
+    "year": 2022,
+    "price": 20000,
+    "color": "Серый",
+    "dealership": "Форд Автосалон"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Tucson",
+    "year": 2023,
+    "price": 28000,
+    "color": "Зеленый",
+    "dealership": "Хендай Центр"
+  },
+  {
+    "brand": "Kia",
+    "model": "Sportage",
+    "year": 2022,
+    "price": 26000,
+    "color": "Оранжевый",
+    "dealership": "Киа Автосалон"
+  }
+]
